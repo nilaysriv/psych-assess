@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ClientFormModal, ClientFormValues } from "../client-form-modal";
+import { SendAssessmentModal } from "../send-assessment-modal";
 import { archiveClient, unarchiveClient } from "../actions";
 
 type Client = {
@@ -18,10 +19,19 @@ type Client = {
   archivedAt: string | null;
 };
 
-export function ClientDetailHeader({ client }: { client: Client }) {
+type TemplateOption = { id: string; title: string };
+
+export function ClientDetailHeader({
+  client,
+  templates,
+}: {
+  client: Client;
+  templates: TemplateOption[];
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
+  const [sending, setSending] = useState(false);
   const [confirmingArchive, setConfirmingArchive] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,6 +86,11 @@ export function ClientDetailHeader({ client }: { client: Client }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          {!client.archivedAt && (
+            <Button size="sm" onClick={() => setSending(true)}>
+              Send Assessment
+            </Button>
+          )}
           <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
             Edit
           </Button>
@@ -107,6 +122,14 @@ export function ClientDetailHeader({ client }: { client: Client }) {
           setEditing(false);
           router.refresh();
         }}
+      />
+
+      <SendAssessmentModal
+        open={sending}
+        clientId={client.id}
+        clientName={client.name}
+        templates={templates}
+        onClose={() => setSending(false)}
       />
 
       <ConfirmDialog

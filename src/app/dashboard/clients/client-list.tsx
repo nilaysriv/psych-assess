@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/field";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { InstanceStatus } from "@/generated/prisma/enums";
 import { ClientFormModal, ClientFormValues } from "./client-form-modal";
+import { SendAssessmentModal } from "./send-assessment-modal";
 import { archiveClient, unarchiveClient } from "./actions";
 
 export type ClientSummary = {
@@ -22,13 +23,22 @@ export type ClientSummary = {
   lastAssessment: { sentAt: string; status: InstanceStatus } | null;
 };
 
-export function ClientList({ clients }: { clients: ClientSummary[] }) {
+type TemplateOption = { id: string; title: string };
+
+export function ClientList({
+  clients,
+  templates,
+}: {
+  clients: ClientSummary[];
+  templates: TemplateOption[];
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [formTarget, setFormTarget] = useState<ClientFormValues | "new" | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<ClientSummary | null>(null);
+  const [sendTarget, setSendTarget] = useState<ClientSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
@@ -132,6 +142,11 @@ export function ClientList({ clients }: { clients: ClientSummary[] }) {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
+                  {!client.archivedAt && (
+                    <Button size="sm" onClick={() => setSendTarget(client)}>
+                      Send
+                    </Button>
+                  )}
                   <Button
                     variant="secondary"
                     size="sm"
@@ -195,6 +210,16 @@ export function ClientList({ clients }: { clients: ClientSummary[] }) {
         onConfirm={confirmArchive}
         onCancel={() => setArchiveTarget(null)}
       />
+
+      {sendTarget && (
+        <SendAssessmentModal
+          open
+          clientId={sendTarget.id}
+          clientName={sendTarget.name}
+          templates={templates}
+          onClose={() => setSendTarget(null)}
+        />
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { requireUserId } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/card";
 import { ClientDetailHeader } from "./client-detail-header";
+import { InstanceList } from "./instance-list";
 
 export default async function ClientDetailPage({
   params,
@@ -13,7 +14,20 @@ export default async function ClientDetailPage({
   const { id } = await params;
   const userId = await requireUserId();
 
-  const client = await prisma.client.findFirst({ where: { id, ownerId: userId } });
+  const [client, templates, instances] = await Promise.all([
+    prisma.client.findFirst({ where: { id, ownerId: userId } }),
+    prisma.assessmentTemplate.findMany({
+      where: { ownerId: userId },
+      orderBy: { title: "asc" },
+      select: { id: true, title: true },
+    }),
+    prisma.assessmentInstance.findMany({
+      where: { clientId: id, template: { ownerId: userId } },
+      orderBy: { sentAt: "desc" },
+      include: { template: { select: { title: true } } },
+    }),
+  ]);
+
   if (!client) notFound();
 
   return (
@@ -34,16 +48,23 @@ export default async function ClientDetailPage({
           notes: client.notes,
           archivedAt: client.archivedAt ? client.archivedAt.toISOString() : null,
         }}
+        templates={templates}
       />
 
       <Card className="mt-6 p-6">
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+        <h2 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
           Assessment history
         </h2>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Sent assessments and score trends will appear here once you send this client an
-          assessment.
-        </p>
+        <InstanceList
+          instances={instances.map((i) => ({
+            id: i.id,
+            templateTitle: i.template.title,
+            status: i.status,
+            sentAt: i.sentAt.toISOString(),
+            completedAt: i.completedAt ? i.completedAt.toISOString() : null,
+            expiresAt: i.expiresAt.toISOString(),
+          }))}
+        />
       </Card>
     </div>
   );
