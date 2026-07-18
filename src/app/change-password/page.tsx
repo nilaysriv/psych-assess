@@ -42,14 +42,12 @@ export default function ChangePasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-sm">
         <h1 className="mb-1 text-xl font-semibold text-gray-900">Set a new password</h1>
-        <p className="mb-6 text-sm text-gray-500">
-          You're using a temporary password. Please choose a new one before continuing.
-        </p>
+        <p className="mb-6 text-sm text-gray-500">Choose a new password below.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="currentPassword" className="mb-1 block text-sm font-medium text-gray-700">
-              Temporary password
+              Current password
             </label>
             <input
               id="currentPassword"

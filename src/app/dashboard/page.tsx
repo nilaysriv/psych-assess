@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { LogoutButton } from "./logout-button";
@@ -16,7 +17,15 @@ export default async function DashboardPage() {
             <h1 className="text-xl font-semibold text-gray-900">AssessTrack</h1>
             <p className="text-sm text-gray-500">Signed in as {user?.name ?? user?.email}</p>
           </div>
-          <LogoutButton />
+          <div className="flex items-center gap-3">
+            <Link
+              href="/change-password"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900"
+            >
+              Change password
+            </Link>
+            <LogoutButton />
+          </div>
         </div>
 
         <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
