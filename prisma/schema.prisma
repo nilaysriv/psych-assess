@@ -1,0 +1,146 @@
+// Prisma schema for AssessTrack.
+// See PRD section 6 for the data model this mirrors.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum QuestionType {
+  single_choice
+  multi_choice
+  likert
+  numeric
+  short_text
+  long_text
+}
+
+enum InstanceStatus {
+  pending
+  completed
+  expired
+  cancelled
+}
+
+// The clinician. Single-user in v1; owner FKs below exist so
+// multi-therapist support can be added later without a rewrite.
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  clients   Client[]
+  templates AssessmentTemplate[]
+
+  @@map("users")
+}
+
+model Client {
+  id         String    @id @default(cuid())
+  ownerId    String    @map("owner_id")
+  owner      User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name       String
+  phone      String?
+  email      String?
+  notes      String?
+  createdAt  DateTime  @default(now()) @map("created_at")
+  archivedAt DateTime? @map("archived_at")
+
+  instances AssessmentInstance[]
+
+  @@index([ownerId])
+  @@map("clients")
+}
+
+model AssessmentTemplate {
+  id          String   @id @default(cuid())
+  ownerId     String   @map("owner_id")
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  hasScoring  Boolean  @default(false) @map("has_scoring")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  questions   Question[]
+  scoringRule ScoringRule?
+  instances   AssessmentInstance[]
+
+  @@index([ownerId])
+  @@map("assessment_templates")
+}
+
+model Question {
+  id         String             @id @default(cuid())
+  templateId String             @map("template_id")
+  template   AssessmentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  order      Int
+  text       String
+  type       QuestionType
+  required   Boolean            @default(true)
+  subscale   String?
+  // Holds choices + point values + scale bounds, shape depends on `type`.
+  config     Json
+
+  @@index([templateId])
+  @@map("questions")
+}
+
+// One-to-one with AssessmentTemplate. Opt-in: templates without
+// scoring simply have no ScoringRule row.
+model ScoringRule {
+  id         String             @id @default(cuid())
+  templateId String             @unique @map("template_id")
+  template   AssessmentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  // [{ min, max, label, color }]
+  severityBands Json @default("[]") @map("severity_bands")
+  // [{ name, questionIds }]
+  subscales     Json @default("[]")
+
+  @@map("scoring_rules")
+}
+
+// A single "send" of a template to a client.
+model AssessmentInstance {
+  id         String             @id @default(cuid())
+  templateId String             @map("template_id")
+  template   AssessmentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  clientId   String             @map("client_id")
+  client     Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Unguessable, cryptographically random token embedded in the
+  // client-facing link. This is the only access control on that link.
+  token       String         @unique
+  status      InstanceStatus @default(pending)
+  sentAt      DateTime       @default(now()) @map("sent_at")
+  completedAt DateTime?      @map("completed_at")
+  expiresAt   DateTime       @map("expires_at")
+
+  response Response?
+
+  @@index([templateId])
+  @@index([clientId])
+  @@map("assessment_instances")
+}
+
+model Response {
+  id          String             @id @default(cuid())
+  instanceId  String             @unique @map("instance_id")
+  instance    AssessmentInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  submittedAt DateTime           @default(now()) @map("submitted_at")
+
+  // question_id -> answer
+  rawAnswers     Json    @map("raw_answers")
+  totalScore     Int?    @map("total_score")
+  subscaleScores Json?   @map("subscale_scores")
+  severityLabel  String? @map("severity_label")
+
+  @@map("responses")
+}
