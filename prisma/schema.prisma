@@ -1,4 +1,4 @@
-// Prisma schema for AssessTrack.
+// Prisma schema for ClinTrack.
 // See PRD section 6 for the data model this mirrors.
 
 generator client {

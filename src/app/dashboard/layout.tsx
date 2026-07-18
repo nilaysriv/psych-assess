@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { DashboardNav } from "./nav";
+import { Footer } from "@/components/footer";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -12,9 +13,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (user.mustChangePassword) redirect("/change-password");
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950">
       <DashboardNav user={{ name: user.name, email: user.email, avatarUrl: user.avatarUrl }} />
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">{children}</main>
+      <Footer />
     </div>
   );
 }

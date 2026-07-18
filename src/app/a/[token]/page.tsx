@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { InstanceStatus, effectiveStatus } from "@/lib/instance-status";
 import { QuestionConfig } from "@/lib/question-types";
 import { Card } from "@/components/ui/card";
+import { Footer } from "@/components/footer";
 import { AssessmentForm } from "./assessment-form";
 
 export const metadata: Metadata = {
@@ -12,11 +13,14 @@ export const metadata: Metadata = {
 
 function StatusScreen({ title, body }: { title: string; body: string }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950">
-      <Card className="w-full max-w-sm p-8 text-center">
-        <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{title}</h1>
-        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{body}</p>
-      </Card>
+    <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950">
+      <div className="flex flex-1 items-center justify-center px-4">
+        <Card className="w-full max-w-sm p-8 text-center">
+          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{title}</h1>
+          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{body}</p>
+        </Card>
+      </div>
+      <Footer />
     </div>
   );
 }

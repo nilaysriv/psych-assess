@@ -1,4 +1,4 @@
-# AssessTrack
+# ClinTrack
 
 A clinical assessment builder and tracker for a solo psychology practice. Build custom psychometric assessments (or use standardized scales like PHQ-9/GAD-7), send them to clients as a one-off link — no login required on their end — and get automatic scoring, severity bands, and score-over-time trends per client.
 
@@ -15,10 +15,14 @@ Actively in development. Current state:
 | Client roster (add/edit/search/archive) | ✅ |
 | Send flow (tokenized links, Awaiting Response queue) | ✅ |
 | Profile (avatar, name, password) | ✅ |
-| Public client-facing submission page | 🚧 |
-| Scoring engine (point values, subscales, severity bands) | 🚧 |
-| Client detail page (score-trend charts, response detail) | 🚧 |
-| Reminder emails, clinic-wide overview dashboard | 🚧 |
+| Public client-facing submission page | ✅ |
+| Scoring engine (point values, subscales, severity bands) | ✅ |
+| Client detail page (score-trend charts, response detail) | ✅ |
+| Clinic-wide overview dashboard (stat tiles, activity chart, client table) | ✅ |
+| Dark mode toggle | ✅ |
+| Deployed to Vercel | ✅ |
+| PHQ-9 / GAD-7 seeded templates | 🚧 (licensing check pending) |
+| Reminder emails | 🚧 |
 | Android app (Capacitor wrapper) | 🚧 |
 
 ## Tech stack
@@ -26,7 +30,7 @@ Actively in development. Current state:
 - **Next.js** (App Router) — frontend + backend in one deployable
 - **Postgres via Neon** — serverless-friendly, pooled connections
 - **Prisma 7** (driver-adapter mode, `@prisma/adapter-pg`) — schema + queries
-- **Tailwind CSS v4** — styling, with automatic dark mode (`prefers-color-scheme`)
+- **Tailwind CSS v4** — styling, with dark mode defaulting to system preference and a manual per-device override
 - **`jose`** — JWT signing/verification for clinician sessions
 - **`bcryptjs`** — password hashing
 - **`@dnd-kit`** — touch-friendly drag-to-reorder in the form builder
@@ -102,7 +106,7 @@ This app stores mental health data — treated as the most sensitive category of
 
 - Full keyboard navigation on the assessment builder's drag-to-reorder (via `@dnd-kit`'s built-in keyboard sensor), not just pointer/touch.
 - Semantic form controls throughout (`label`/`input` pairing, native `radio`/`checkbox`/`select` elements) rather than custom-styled non-semantic widgets, so screen readers and browser autofill behave correctly.
-- Dark mode follows system preference (`prefers-color-scheme`) automatically, rather than requiring a manual toggle.
+- Dark mode defaults to system preference (`prefers-color-scheme`) and can be overridden per-device with the toggle in the nav; the choice persists locally and never leaves the device.
 - Destructive actions (delete, archive, cancel a send) always require an explicit confirm step, reducing the chance of an accidental action being hard to recover from.
 
 **Known gaps, not yet addressed:** no formal WCAG audit has been run; color contrast in the current palette hasn't been checked against AA thresholds; the client-facing public form (in progress) hasn't yet been tested with a screen reader end-to-end. Treat this section as "what's been considered," not a compliance claim.

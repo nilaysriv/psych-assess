@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { Avatar } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileModal } from "./profile-modal";
 
 const links = [
@@ -29,12 +30,13 @@ export function DashboardNav({ user }: { user: User }) {
 
   return (
     <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
-      <div className="mx-auto max-w-5xl px-4 py-3">
+      <div className="mx-auto max-w-7xl px-4 py-3">
         <div className="flex items-center justify-between">
           <Link href="/dashboard" className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
-            AssessTrack
+            ClinTrack
           </Link>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <button
               onClick={handleLogout}
               className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"

@@ -1,9 +1,12 @@
 import { requireUserId } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SeverityBand, findSeverityBand } from "@/lib/scoring";
+import { severityHex } from "@/lib/severity-colors";
 import { StatTile } from "./stat-tile";
 import { ActivityChart, WeekBucket } from "./activity-chart";
+import { SeverityDistributionChart, SeverityBucket } from "./severity-distribution-chart";
 import { ClientSummaryTable, ClientSummaryRow } from "./client-summary-table";
+import { DashboardRefresh } from "./dashboard-refresh";
 
 function startOfWeek(d: Date): Date {
   const date = new Date(d);
@@ -90,8 +93,29 @@ export default async function DashboardPage() {
 
   const elevatedCount = clientRows.filter((r) => r.lastSeverityTone === "red").length;
 
+  const distributionMap = new Map<string, SeverityBucket>();
+  for (const row of clientRows) {
+    if (!row.lastSeverityLabel || row.lastScore === null) continue;
+    const key = row.lastSeverityLabel;
+    const existing = distributionMap.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      distributionMap.set(key, {
+        label: key,
+        count: 1,
+        color: severityHex(row.lastSeverityTone ?? undefined),
+      });
+    }
+  }
+  const distributionData = Array.from(distributionMap.values()).sort((a, b) => b.count - a.count);
+
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-end">
+        <DashboardRefresh />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-4">
         <StatTile label="Active clients" value={totalClients} />
         <StatTile label="Awaiting response" value={pendingCount} />
@@ -103,7 +127,10 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <ActivityChart data={activityData} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ActivityChart data={activityData} />
+        <SeverityDistributionChart data={distributionData} />
+      </div>
 
       <div>
         <h2 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
