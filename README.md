@@ -21,8 +21,8 @@ Actively in development. Current state:
 | Clinic-wide overview dashboard (stat tiles, activity chart, client table) | ✅ |
 | Dark mode toggle | ✅ |
 | Deployed to Vercel | ✅ |
+| Reminder emails (Vercel Cron + Resend) | ✅ |
 | PHQ-9 / GAD-7 seeded templates | 🚧 (licensing check pending) |
-| Reminder emails | 🚧 |
 | Android app (Capacitor wrapper) | 🚧 |
 
 ## Tech stack
@@ -54,6 +54,8 @@ JWT_SECRET=         # random secret, e.g. `node -e "console.log(require('crypto'
 SEED_CLINICIAN_EMAIL=
 SEED_CLINICIAN_PASSWORD=
 SEED_CLINICIAN_NAME=
+RESEND_API_KEY=     # from resend.com — sends reminder emails
+CRON_SECRET=        # random secret verifying /api/cron/reminders — see .env.example
 ```
 
 Then:
@@ -68,7 +70,11 @@ The seeded account is forced to change its password on first login — the seed 
 
 ## Deployment
 
-Deploys to Vercel directly from this repo. Set the same environment variables in the Vercel project settings (never commit `.env`). The app is designed around Vercel Hobby's free-tier constraints: pooled DB connections are mandatory (serverless functions can't hold a connection pool themselves), no background workers/cron beyond Vercel Cron, and a 10s function timeout.
+Deploys to Vercel directly from this repo. Set the same environment variables in the Vercel project settings (never commit `.env`), including `RESEND_API_KEY` and `CRON_SECRET` if you want reminder emails to work in production. The app is designed around Vercel Hobby's free-tier constraints: pooled DB connections are mandatory (serverless functions can't hold a connection pool themselves), no background workers/cron beyond Vercel Cron, and a 10s function timeout.
+
+## Reminders
+
+`vercel.json` schedules `/api/cron/reminders` to run once daily (Hobby tier's minimum interval). Each pending assessment tracks its own `lastReminderSentAt`, so the actual cadence — first reminder after 7 days pending, repeating every 7 days — is enforced in code independent of how often the cron itself fires. Each run sends the client a direct nudge (if they have an email on file) and the clinician a single digest of everything currently overdue. The route rejects any request without the `CRON_SECRET` bearer token, which Vercel supplies automatically once you set that env var.
 
 ## Non-Goals (v1)
 

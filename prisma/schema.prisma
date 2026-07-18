@@ -123,11 +123,15 @@ model AssessmentInstance {
 
   // Unguessable, cryptographically random token embedded in the
   // client-facing link. This is the only access control on that link.
-  token       String         @unique
-  status      InstanceStatus @default(pending)
-  sentAt      DateTime       @default(now()) @map("sent_at")
-  completedAt DateTime?      @map("completed_at")
-  expiresAt   DateTime       @map("expires_at")
+  token              String         @unique
+  status             InstanceStatus @default(pending)
+  sentAt             DateTime       @default(now()) @map("sent_at")
+  completedAt        DateTime?      @map("completed_at")
+  expiresAt          DateTime       @map("expires_at")
+  // Null until the first reminder goes out; re-checked by the reminder
+  // cron against the repeat interval so a pending instance isn't
+  // re-nudged every single day.
+  lastReminderSentAt DateTime?      @map("last_reminder_sent_at")
 
   response Response?
 
