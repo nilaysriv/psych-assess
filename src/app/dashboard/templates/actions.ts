@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUserId } from "@/lib/auth";
 import { QuestionConfig, QuestionType } from "@/lib/question-types";
+import { SeverityBand } from "@/lib/scoring";
 import type { Prisma } from "@/generated/prisma/client";
 
 export type QuestionInput = {
@@ -18,6 +19,8 @@ export type SaveTemplateInput = {
   id?: string;
   title: string;
   description?: string;
+  hasScoring: boolean;
+  severityBands: SeverityBand[];
   questions: QuestionInput[];
 };
 
@@ -37,11 +40,20 @@ export async function saveTemplate(input: SaveTemplateInput): Promise<{ id: stri
       if (!existing) throw new Error("Template not found.");
       await tx.assessmentTemplate.update({
         where: { id },
-        data: { title, description: input.description?.trim() || null },
+        data: {
+          title,
+          description: input.description?.trim() || null,
+          hasScoring: input.hasScoring,
+        },
       });
     } else {
       const created = await tx.assessmentTemplate.create({
-        data: { ownerId: userId, title, description: input.description?.trim() || null },
+        data: {
+          ownerId: userId,
+          title,
+          description: input.description?.trim() || null,
+          hasScoring: input.hasScoring,
+        },
       });
       id = created.id;
     }
@@ -59,6 +71,19 @@ export async function saveTemplate(input: SaveTemplateInput): Promise<{ id: stri
           config: q.config as unknown as Prisma.InputJsonValue,
         })),
       });
+    }
+
+    if (input.hasScoring) {
+      await tx.scoringRule.upsert({
+        where: { templateId: id },
+        update: { severityBands: input.severityBands as unknown as Prisma.InputJsonValue },
+        create: {
+          templateId: id,
+          severityBands: input.severityBands as unknown as Prisma.InputJsonValue,
+        },
+      });
+    } else {
+      await tx.scoringRule.deleteMany({ where: { templateId: id } });
     }
 
     return id;
@@ -91,16 +116,16 @@ export async function duplicateTemplate(id: string): Promise<{ id: string }> {
 
   const source = await prisma.assessmentTemplate.findFirst({
     where: { id, ownerId: userId },
-    include: { questions: { orderBy: { order: "asc" } } },
+    include: { questions: { orderBy: { order: "asc" } }, scoringRule: true },
   });
   if (!source) throw new Error("Template not found.");
 
-  // TODO(scoring engine): also copy source.scoringRule once ScoringRule exists.
   const copy = await prisma.assessmentTemplate.create({
     data: {
       ownerId: userId,
       title: `${source.title} (Copy)`,
       description: source.description,
+      hasScoring: source.hasScoring,
       questions: {
         create: source.questions.map((q) => ({
           order: q.order,
@@ -111,6 +136,9 @@ export async function duplicateTemplate(id: string): Promise<{ id: string }> {
           config: q.config as Prisma.InputJsonValue,
         })),
       },
+      scoringRule: source.scoringRule
+        ? { create: { severityBands: source.scoringRule.severityBands as Prisma.InputJsonValue } }
+        : undefined,
     },
   });
 

@@ -5,6 +5,9 @@ export { QuestionType };
 export type ChoiceOption = {
   id: string;
   label: string;
+  // Undefined = this option isn't scored (excluded from totals), distinct
+  // from 0 which is a real score value.
+  points?: number;
 };
 
 export type ChoiceConfig = {

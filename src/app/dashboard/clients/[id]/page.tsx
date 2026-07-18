@@ -24,7 +24,10 @@ export default async function ClientDetailPage({
     prisma.assessmentInstance.findMany({
       where: { clientId: id, template: { ownerId: userId } },
       orderBy: { sentAt: "desc" },
-      include: { template: { select: { title: true } } },
+      include: {
+        template: { select: { title: true } },
+        response: { select: { totalScore: true, severityLabel: true } },
+      },
     }),
   ]);
 
@@ -63,6 +66,8 @@ export default async function ClientDetailPage({
             sentAt: i.sentAt.toISOString(),
             completedAt: i.completedAt ? i.completedAt.toISOString() : null,
             expiresAt: i.expiresAt.toISOString(),
+            totalScore: i.response?.totalScore ?? null,
+            severityLabel: i.response?.severityLabel ?? null,
           }))}
         />
       </Card>

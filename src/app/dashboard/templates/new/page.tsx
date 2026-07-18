@@ -6,6 +6,8 @@ export default function NewTemplatePage() {
       initial={{
         title: "",
         description: "",
+        hasScoring: false,
+        severityBands: [],
         questions: [],
       }}
     />

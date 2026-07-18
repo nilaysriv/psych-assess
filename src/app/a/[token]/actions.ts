@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/db";
 import { InstanceStatus, effectiveStatus } from "@/lib/instance-status";
+import { QuestionConfig } from "@/lib/question-types";
+import { SeverityBand, computeScore, findSeverityBand } from "@/lib/scoring";
 import type { Prisma } from "@/generated/prisma/client";
 
 function isAnswerMissing(value: unknown): boolean {
@@ -17,7 +19,9 @@ export async function submitAssessment(
 ): Promise<void> {
   const instance = await prisma.assessmentInstance.findUnique({
     where: { token },
-    include: { template: { include: { questions: true } } },
+    include: {
+      template: { include: { questions: true, scoringRule: true } },
+    },
   });
 
   if (!instance) {
@@ -42,12 +46,35 @@ export async function submitAssessment(
     if (questionIds.has(id)) rawAnswers[id] = value;
   }
 
+  let totalScore: number | null = null;
+  let subscaleScores: Record<string, number> | null = null;
+  let severityLabel: string | null = null;
+
+  if (instance.template.hasScoring) {
+    const result = computeScore(
+      instance.template.questions.map((q) => ({
+        id: q.id,
+        type: q.type,
+        config: q.config as unknown as QuestionConfig,
+        subscale: q.subscale,
+      })),
+      rawAnswers,
+    );
+    totalScore = result.totalScore;
+    subscaleScores = result.subscaleScores;
+
+    const bands = (instance.template.scoringRule?.severityBands as unknown as SeverityBand[]) ?? [];
+    severityLabel = findSeverityBand(totalScore, bands)?.label ?? null;
+  }
+
   await prisma.$transaction([
     prisma.response.create({
       data: {
         instanceId: instance.id,
         rawAnswers: rawAnswers as unknown as Prisma.InputJsonValue,
-        // TODO(scoring engine): compute totalScore/subscaleScores/severityLabel here.
+        totalScore,
+        subscaleScores: subscaleScores as unknown as Prisma.InputJsonValue,
+        severityLabel,
       },
     }),
     prisma.assessmentInstance.update({

@@ -18,11 +18,13 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { QuestionType, defaultConfigFor } from "@/lib/question-types";
+import { SeverityBand } from "@/lib/scoring";
 import { QuestionRenderer } from "@/components/question-renderer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/field";
 import { QuestionCard, BuilderQuestion } from "./question-card";
+import { SeverityBandsEditor } from "./severity-bands-editor";
 import { saveTemplate } from "./actions";
 
 let nextKey = 0;
@@ -35,6 +37,8 @@ export type InitialTemplate = {
   id?: string;
   title: string;
   description: string;
+  hasScoring: boolean;
+  severityBands: SeverityBand[];
   questions: BuilderQuestion[];
 };
 
@@ -42,6 +46,8 @@ export function TemplateBuilder({ initial }: { initial: InitialTemplate }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description);
+  const [hasScoring, setHasScoring] = useState(initial.hasScoring);
+  const [severityBands, setSeverityBands] = useState<SeverityBand[]>(initial.severityBands);
   const [questions, setQuestions] = useState<BuilderQuestion[]>(initial.questions);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +106,8 @@ export function TemplateBuilder({ initial }: { initial: InitialTemplate }) {
           id: initial.id,
           title,
           description,
+          hasScoring,
+          severityBands,
           questions: questions.map((q) => ({
             text: q.text,
             type: q.type,
@@ -161,6 +169,40 @@ export function TemplateBuilder({ initial }: { initial: InitialTemplate }) {
             />
           </Card>
 
+          <Card className="p-4 sm:p-5">
+            <label className="flex items-center gap-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              <input
+                type="checkbox"
+                checked={hasScoring}
+                onChange={(e) => {
+                  setHasScoring(e.target.checked);
+                  markDirty();
+                }}
+                className="h-4 w-4 rounded accent-indigo-600"
+              />
+              Score this assessment
+            </label>
+            <p className="mt-1 pl-6 text-xs text-zinc-500 dark:text-zinc-400">
+              Assign point values to choice options, group questions into subscales, and define
+              severity bands. Free-text questions are never scored.
+            </p>
+
+            {hasScoring && (
+              <div className="mt-4 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+                  Severity bands
+                </p>
+                <SeverityBandsEditor
+                  bands={severityBands}
+                  onChange={(bands) => {
+                    setSeverityBands(bands);
+                    markDirty();
+                  }}
+                />
+              </div>
+            )}
+          </Card>
+
           <DndContext
             id="template-questions"
             sensors={sensors}
@@ -174,6 +216,7 @@ export function TemplateBuilder({ initial }: { initial: InitialTemplate }) {
                     key={q.key}
                     question={q}
                     index={i}
+                    scoringEnabled={hasScoring}
                     onChange={(patch) => updateQuestion(q.key, patch)}
                     onRemove={() => removeQuestion(q.key)}
                   />

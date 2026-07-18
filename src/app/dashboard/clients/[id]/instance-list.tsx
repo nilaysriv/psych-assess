@@ -15,6 +15,8 @@ export type InstanceSummary = {
   sentAt: string;
   completedAt: string | null;
   expiresAt: string;
+  totalScore: number | null;
+  severityLabel: string | null;
 };
 
 export function InstanceList({ instances }: { instances: InstanceSummary[] }) {
@@ -69,6 +71,12 @@ export function InstanceList({ instances }: { instances: InstanceSummary[] }) {
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              {instance.totalScore !== null && (
+                <Badge tone="indigo">
+                  Score: {instance.totalScore}
+                  {instance.severityLabel ? ` (${instance.severityLabel})` : ""}
+                </Badge>
+              )}
               <Badge tone={STATUS_TONES[status]}>{STATUS_LABELS[status]}</Badge>
               {status === InstanceStatus.pending && (
                 <Button

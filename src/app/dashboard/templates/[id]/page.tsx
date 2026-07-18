@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireUserId } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { QuestionConfig } from "@/lib/question-types";
+import { SeverityBand } from "@/lib/scoring";
 import { TemplateBuilder } from "../template-builder";
 
 export default async function EditTemplatePage({
@@ -14,7 +15,7 @@ export default async function EditTemplatePage({
 
   const template = await prisma.assessmentTemplate.findFirst({
     where: { id, ownerId: userId },
-    include: { questions: { orderBy: { order: "asc" } } },
+    include: { questions: { orderBy: { order: "asc" } }, scoringRule: true },
   });
 
   if (!template) notFound();
@@ -25,6 +26,8 @@ export default async function EditTemplatePage({
         id: template.id,
         title: template.title,
         description: template.description ?? "",
+        hasScoring: template.hasScoring,
+        severityBands: (template.scoringRule?.severityBands as unknown as SeverityBand[]) ?? [],
         questions: template.questions.map((q) => ({
           key: q.id,
           text: q.text,

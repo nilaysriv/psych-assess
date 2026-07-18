@@ -14,6 +14,7 @@ import {
   isChoiceType,
   newChoiceOption,
 } from "@/lib/question-types";
+import { isScorableType } from "@/lib/scoring";
 import { Card } from "@/components/ui/card";
 import { Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -31,11 +32,12 @@ export type BuilderQuestion = {
 type Props = {
   question: BuilderQuestion;
   index: number;
+  scoringEnabled: boolean;
   onChange: (patch: Partial<BuilderQuestion>) => void;
   onRemove: () => void;
 };
 
-export function QuestionCard({ question, index, onChange, onRemove }: Props) {
+export function QuestionCard({ question, index, scoringEnabled, onChange, onRemove }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: question.key,
   });
@@ -78,7 +80,7 @@ export function QuestionCard({ question, index, onChange, onRemove }: Props) {
               value={question.text}
               onChange={(e) => onChange({ text: e.target.value })}
               placeholder="Question text"
-              className="flex-1"
+              className="min-w-0 flex-1"
             />
           </div>
 
@@ -107,10 +109,22 @@ export function QuestionCard({ question, index, onChange, onRemove }: Props) {
               />
               Required
             </label>
+
+            {scoringEnabled && isScorableType(question.type) && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm text-zinc-500 dark:text-zinc-400">Subscale</span>
+                <Input
+                  value={question.subscale}
+                  onChange={(e) => onChange({ subscale: e.target.value })}
+                  placeholder="optional"
+                  className="w-32"
+                />
+              </div>
+            )}
           </div>
 
           <div className="pl-5">
-            <QuestionConfigEditor question={question} onChange={onChange} />
+            <QuestionConfigEditor question={question} scoringEnabled={scoringEnabled} onChange={onChange} />
           </div>
         </div>
 
@@ -129,9 +143,9 @@ export function QuestionCard({ question, index, onChange, onRemove }: Props) {
   );
 }
 
-type ConfigEditorProps = Pick<Props, "question" | "onChange">;
+type ConfigEditorProps = Pick<Props, "question" | "scoringEnabled" | "onChange">;
 
-function QuestionConfigEditor({ question, onChange }: ConfigEditorProps) {
+function QuestionConfigEditor({ question, scoringEnabled, onChange }: ConfigEditorProps) {
   if (isChoiceType(question.type)) {
     const { choices } = question.config as ChoiceConfig;
     const updateChoices = (next: typeof choices) => onChange({ config: { choices: next } });
@@ -149,8 +163,29 @@ function QuestionConfigEditor({ question, onChange }: ConfigEditorProps) {
                 )
               }
               placeholder={`Option ${i + 1}`}
-              className="flex-1"
+              className="min-w-0 flex-1"
             />
+            {scoringEnabled && (
+              <Input
+                type="number"
+                value={choice.points ?? ""}
+                onChange={(e) =>
+                  updateChoices(
+                    choices.map((c) =>
+                      c.id === choice.id
+                        ? {
+                            ...c,
+                            points: e.target.value === "" ? undefined : Number(e.target.value),
+                          }
+                        : c,
+                    ),
+                  )
+                }
+                placeholder="pts"
+                title="Points awarded for this option"
+                className="w-16 shrink-0"
+              />
+            )}
             <button
               type="button"
               aria-label="Remove option"
@@ -218,6 +253,11 @@ function QuestionConfigEditor({ question, onChange }: ConfigEditorProps) {
             className="w-40"
           />
         </div>
+        {scoringEnabled && (
+          <p className="text-xs text-zinc-400 dark:text-zinc-500">
+            Scored automatically using the selected number (1–{scalePoints}).
+          </p>
+        )}
       </div>
     );
   }
@@ -253,6 +293,9 @@ function QuestionConfigEditor({ question, onChange }: ConfigEditorProps) {
             className="w-20"
           />
         </div>
+        {scoringEnabled && (
+          <p className="text-xs text-zinc-400 dark:text-zinc-500">Scored using the entered value.</p>
+        )}
       </div>
     );
   }
