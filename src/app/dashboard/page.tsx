@@ -1,37 +1,35 @@
 import Link from "next/link";
-import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { LogoutButton } from "./logout-button";
+import { Card } from "@/components/ui/card";
 
-export default async function DashboardPage() {
-  const session = await getSession();
-  const user = session
-    ? await prisma.user.findUnique({ where: { id: session.userId } })
-    : null;
+const items = [
+  {
+    href: "/dashboard/templates",
+    title: "Assessments",
+    description: "Build and manage your assessment templates.",
+  },
+  {
+    href: "/dashboard/clients",
+    title: "Clients",
+    description: "Your client roster and their assessment history.",
+  },
+  {
+    href: "/dashboard/awaiting-response",
+    title: "Awaiting Response",
+    description: "Assessments sent but not yet completed.",
+  },
+];
 
+export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">AssessTrack</h1>
-            <p className="text-sm text-gray-500">Signed in as {user?.name ?? user?.email}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/change-password"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900"
-            >
-              Change password
-            </Link>
-            <LogoutButton />
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
-          Templates, client roster, and the Awaiting Response queue land here next.
-        </div>
-      </div>
+    <div className="grid gap-4 sm:grid-cols-3">
+      {items.map((item) => (
+        <Link key={item.href} href={item.href}>
+          <Card className="h-full p-5 transition-colors hover:border-indigo-300 dark:hover:border-indigo-700">
+            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{item.title}</h2>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{item.description}</p>
+          </Card>
+        </Link>
+      ))}
     </div>
   );
 }

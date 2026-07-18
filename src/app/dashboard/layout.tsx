@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { DashboardNav } from "./nav";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -10,5 +11,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect("/login");
   if (user.mustChangePassword) redirect("/change-password");
 
-  return children;
+  return (
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <DashboardNav userLabel={user.name || user.email} />
+      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+    </div>
+  );
 }

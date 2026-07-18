@@ -43,3 +43,12 @@ export async function getSession(): Promise<SessionPayload | null> {
   if (!token) return null;
   return verifySessionToken(token);
 }
+
+// For Server Actions / Route Handlers that require a signed-in user.
+export async function requireUserId(): Promise<string> {
+  const session = await getSession();
+  if (!session) {
+    throw new Error("Not signed in.");
+  }
+  return session.userId;
+}

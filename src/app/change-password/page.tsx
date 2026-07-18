@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input, Label } from "@/components/ui/field";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -39,32 +42,29 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-sm">
-        <h1 className="mb-1 text-xl font-semibold text-gray-900">Set a new password</h1>
-        <p className="mb-6 text-sm text-gray-500">Choose a new password below.</p>
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950">
+      <Card className="w-full max-w-sm p-8">
+        <h1 className="mb-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+          Set a new password
+        </h1>
+        <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">Choose a new password below.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="currentPassword" className="mb-1 block text-sm font-medium text-gray-700">
-              Current password
-            </label>
-            <input
+            <Label htmlFor="currentPassword">Current password</Label>
+            <Input
               id="currentPassword"
               type="password"
               autoComplete="current-password"
               required
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label htmlFor="newPassword" className="mb-1 block text-sm font-medium text-gray-700">
-              New password
-            </label>
-            <input
+            <Label htmlFor="newPassword">New password</Label>
+            <Input
               id="newPassword"
               type="password"
               autoComplete="new-password"
@@ -72,15 +72,12 @@ export default function ChangePasswordPage() {
               minLength={8}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="mb-1 block text-sm font-medium text-gray-700">
-              Confirm new password
-            </label>
-            <input
+            <Label htmlFor="confirmPassword">Confirm new password</Label>
+            <Input
               id="confirmPassword"
               type="password"
               autoComplete="new-password"
@@ -88,21 +85,16 @@ export default function ChangePasswordPage() {
               minLength={8}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-60"
-          >
+          <Button type="submit" disabled={submitting} className="w-full">
             {submitting ? "Saving…" : "Save new password"}
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -112,7 +112,9 @@ model ScoringRule {
 model AssessmentInstance {
   id         String             @id @default(cuid())
   templateId String             @map("template_id")
-  template   AssessmentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  // Restrict, not Cascade: a template that has already been sent must
+  // not be deletable out from under its historical responses.
+  template   AssessmentTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
   clientId   String             @map("client_id")
   client     Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
