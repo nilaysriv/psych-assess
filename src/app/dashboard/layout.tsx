@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <DashboardNav userLabel={user.name || user.email} />
+      <DashboardNav user={{ name: user.name, email: user.email, avatarUrl: user.avatarUrl }} />
       <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
     </div>
   );

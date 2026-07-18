@@ -29,12 +29,15 @@ enum InstanceStatus {
 // The clinician. Single-user in v1; owner FKs below exist so
 // multi-therapist support can be added later without a rewrite.
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  passwordHash      String   @map("password_hash")
-  name              String
-  mustChangePassword Boolean @default(false) @map("must_change_password")
-  createdAt         DateTime @default(now()) @map("created_at")
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  passwordHash       String   @map("password_hash")
+  name               String
+  // Small resized image stored as a data: URL -- fine for a single
+  // clinician's avatar, not worth a blob storage service for this volume.
+  avatarUrl          String?  @map("avatar_url")
+  mustChangePassword Boolean  @default(false) @map("must_change_password")
+  createdAt          DateTime @default(now()) @map("created_at")
 
   clients   Client[]
   templates AssessmentTemplate[]
