@@ -1,11 +1,10 @@
 "use client";
 
 import { SeverityBand } from "@/lib/scoring";
+import { SEVERITY_COLOR_NAMES } from "@/lib/severity-colors";
 import { Input, Select } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
-const COLOR_OPTIONS = ["green", "amber", "orange", "red", "blue", "neutral"] as const;
 
 function newBand(): SeverityBand {
   return { min: 0, max: 0, label: "", color: "green" };
@@ -56,7 +55,7 @@ export function SeverityBandsEditor({
             onChange={(e) => update(i, { color: e.target.value })}
             className="w-28"
           >
-            {COLOR_OPTIONS.map((c) => (
+            {SEVERITY_COLOR_NAMES.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>

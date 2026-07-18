@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,13 @@ export type InstanceSummary = {
   severityLabel: string | null;
 };
 
-export function InstanceList({ instances }: { instances: InstanceSummary[] }) {
+export function InstanceList({
+  clientId,
+  instances,
+}: {
+  clientId: string;
+  instances: InstanceSummary[];
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [cancelTarget, setCancelTarget] = useState<InstanceSummary | null>(null);
@@ -55,11 +62,9 @@ export function InstanceList({ instances }: { instances: InstanceSummary[] }) {
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       {instances.map((instance) => {
         const status = effectiveStatus(instance.status, new Date(instance.expiresAt));
-        return (
-          <div
-            key={instance.id}
-            className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-800"
-          >
+        const isCompleted = status === InstanceStatus.completed;
+        const content = (
+          <>
             <div className="min-w-0">
               <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                 {instance.templateTitle}
@@ -83,13 +88,33 @@ export function InstanceList({ instances }: { instances: InstanceSummary[] }) {
                   variant="ghost"
                   size="sm"
                   disabled={isPending}
-                  onClick={() => setCancelTarget(instance)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCancelTarget(instance);
+                  }}
                   className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
                 >
                   Cancel
                 </Button>
               )}
             </div>
+          </>
+        );
+
+        const rowClass =
+          "flex items-center justify-between gap-3 rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-800";
+
+        return isCompleted ? (
+          <Link
+            key={instance.id}
+            href={`/dashboard/clients/${clientId}/instances/${instance.id}`}
+            className={`${rowClass} transition-colors hover:border-indigo-300 dark:hover:border-indigo-700`}
+          >
+            {content}
+          </Link>
+        ) : (
+          <div key={instance.id} className={rowClass}>
+            {content}
           </div>
         );
       })}
